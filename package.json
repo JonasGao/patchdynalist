@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "asar": "^2.0.1",
+    "rimraf": "^3.0.0"
+  },
+  "name": "patchdynalist",
+  "version": "1.0.0",
+  "main": "index.js",
+  "private": true,
+  "repository": "https://github.com/JonasGao/patchdynalist.git",
+  "author": "JonasGao <gaopinsong@live.cn>",
+  "license": "MIT"
+}
