@@ -58,8 +58,7 @@ async function writeFile(path, data) {
   });
 }
 
-async function backupAsar(path) {
-  const backupPath = path + "backup";
+async function backupAsar(path, backupPath) {
   try {
     await exists(backupPath);
     return;
@@ -78,7 +77,7 @@ async function backupAsar(path) {
         res();
       }
     });
-  })
+  });
 }
 
 const [, , DYNALIST_HOME] = process.argv;
@@ -91,6 +90,8 @@ const DYNALIST_ASAR_NAME = "dynalist.asar";
 
 const APP_ASAR = path.join(RESOURCES_DIR, APP_ASAR_NAME);
 const DYNALIST_ASAR = path.join(RESOURCES_DIR, DYNALIST_ASAR_NAME);
+const BACKUP_APP_ASAR = APP_ASAR + "backup";
+const BACKUP_DYNALIST_ASAR = DYNALIST_ASAR + "backup";
 
 const APP_DIR = path.join(TEMP_DIR, "app");
 const DYNALIST_DIR = path.join(TEMP_DIR, "dynalist");
@@ -112,9 +113,9 @@ function main() {
    * Patch ```class Updater``` "_check()"
    */
   const patchApp = async () => {
-    await backupAsar(APP_ASAR);
+    await backupAsar(APP_ASAR, BACKUP_APP_ASAR);
     await clear(APP_DIR);
-    await asar.extractAll(APP_ASAR, APP_DIR);
+    await asar.extractAll(BACKUP_APP_ASAR, APP_DIR);
     const appIndexJsFile = path.join(APP_DIR, "index.js");
     const appIndexJsContent = await readFile(appIndexJsFile);
     const checkFunctionStartIndex = appIndexJsContent.indexOf("_check(");
@@ -138,17 +139,21 @@ function main() {
    * ```
    */
   const patchDynalist = async () => {
-    await backupAsar(DYNALIST_ASAR);
+    await backupAsar(DYNALIST_ASAR, BACKUP_DYNALIST_ASAR);
     await clear(DYNALIST_DIR);
-    await asar.extractAll(DYNALIST_ASAR, DYNALIST_DIR);
+    await asar.extractAll(BACKUP_DYNALIST_ASAR, DYNALIST_DIR);
     const jsFile = path.join(DYNALIST_DIR, "www/assets/js/main.min.js");
     const jsCode = await readFile(jsFile);
-    const breakPoint = "this.pref_font_css_el.innerHTML=\".u-use-pref-font { \"+o+s+\"}\"";
+    const breakPoint =
+      'this.pref_font_css_el.innerHTML=".u-use-pref-font { "+o+s+"}"';
     const breakPointIndex = jsCode.indexOf(breakPoint);
     if (breakPointIndex < 0) {
       throw new Error("Cant find break point!");
     }
-    const newCode = jsCode.replace("\"+o+s+\"", "font-family: \\\"等距更纱黑体 SC\\\"");
+    const newCode = jsCode.replace(
+      '"+o+s+"',
+      'font-family: \\"等距更纱黑体 SC\\"'
+    );
     await writeFile(jsFile, newCode);
     await asar.createPackage(DYNALIST_DIR, DYNALIST_ASAR);
   };
