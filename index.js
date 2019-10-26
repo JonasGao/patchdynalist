@@ -80,7 +80,12 @@ async function backupAsar(path, backupPath) {
   });
 }
 
-const [, , DYNALIST_HOME] = process.argv;
+const [, , DYNALIST_HOME, FONT_NAME] = process.argv;
+
+if (!FONT_NAME) {
+  console.log("Please give me \"font name\" like this: node index.js <path-to-dynalist> \"Fira Code\"");
+  return;
+}
 
 const RESOURCES_DIR = path.join(DYNALIST_HOME, "resources");
 const TEMP_DIR = path.join(RESOURCES_DIR, "temp");
@@ -152,7 +157,7 @@ function main() {
     }
     const newCode = jsCode.replace(
       '"+o+s+"',
-      'font-family: \\"等距更纱黑体 SC\\"'
+      `font-family: \\"${FONT_NAME}\\"`
     );
     await writeFile(jsFile, newCode);
     await asar.createPackage(DYNALIST_DIR, DYNALIST_ASAR);
